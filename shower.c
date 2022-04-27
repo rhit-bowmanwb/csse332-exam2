@@ -78,6 +78,7 @@ int main()
     sleep(3);
     pthread_create(&tid[i++],NULL, thread, (void*) 2);
     pthread_create(&tid[i++],NULL, thread, (void*) 3);
+    sleep(1);
     pthread_create(&tid[i++],NULL, thread, (void*) 4);
     sleep(10);
 
