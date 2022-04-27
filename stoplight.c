@@ -44,6 +44,11 @@ intersection.  Because no car will enter the intersection when the
 stoplight is yellow, there is no darger of the number of cars in the
 intersection increasing when the stoplight is yellow.
 
+The stoplight starts by being green for northsouth cars and then transition the
+yellow and to green for eastwest and so on.. (Note the print statement at line
+135)
+
+
 Add concurrency primitives to the given code to implement the behavior
 described.  You may modify both car and stoplight threads.
 
@@ -122,15 +127,15 @@ void *stoplight(void *arg)
 
 int main()
 {
-    
+
     pthread_t tid[100];
     int i = 0;
 
     // make sure we display the initial stoplight state before cars start
-    printf("green in northsouth direction\n");        
+    printf("green in northsouth direction\n");
     pthread_create(&tid[i++],NULL,stoplight,NULL);
 
-    
+
     pthread_create(&tid[i++],NULL,east_west,NULL);
     pthread_create(&tid[i++],NULL,north_south,NULL);
     pthread_create(&tid[i++],NULL,north_south,NULL);
@@ -140,8 +145,8 @@ int main()
     sleep(1);
     pthread_create(&tid[i++],NULL,east_west,NULL);
     pthread_create(&tid[i++],NULL,north_south,NULL);
-    
-    
+
+
 
     for(int j = 1; j < i; j++) {
         pthread_join(tid[j],NULL);

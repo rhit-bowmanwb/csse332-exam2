@@ -87,11 +87,12 @@ threads completes, we should start a new sieve thread for the next
 number > 5 we think is prime (7).  Once our second thread finishes, we
 should start a sieve for the next prime that remains after 7, etc.
 
-Every time one of our 3 threads finish, we should start a new thread
-for the next unsieved prime.  We should keep doing this until we've
-started sieves for all primes less that MAX_NUM (we could actually
-stop a little sooner than that, but lets not be fancy).  It should
-look like this:
+To make things simple, we will run our 3 threads in batches, i.e., we start the
+first three threads for 2,3, and 5. Then we wait for them to finish before we
+launch the next batch of three threads for 7, 11, and 13. And so on after that
+in batches of three threads until we've started sieves for all primes less than
+MAX_NUM (we could actually stop a little sooner than that, but let's not be fancy).
+It should look like this:
 
     starting sieve for 2
     starting sieve for 3
@@ -131,7 +132,7 @@ look like this:
     sieve 2 found composite 44
     sieve 2 found composite 46
     sieve for 2 finished
-    starting sieve for 7 <- this line could happen anytime after sieve for 5 finishes
+    starting sieve for 7
     starting sieve for 13
     starting sieve for 11
     sieve for 13 finished
@@ -207,7 +208,7 @@ int main(int argc, char **argv)
   sieve_for(3);
   sieve_for(5);
 
-  // here's where you add your loop that stards threads once other
+  // here's where you add your loop that starts batches of threads once other
   // threads finish when you do part 2
 
   printf("primes are ");

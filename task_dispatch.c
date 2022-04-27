@@ -74,8 +74,9 @@ int get_job() {
 
     // you'll need to do some work to ensure this is safe
     int my_job = job_to_do;
+    job_to_do = 0;
     return my_job;
-    
+
 }
 
 void assign_job(int job_num) {
