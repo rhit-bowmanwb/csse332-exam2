@@ -177,8 +177,9 @@ about this bug.
 
 char nums[MAX_NUM];
 
-void* sieve_for(long num) {
-
+void* sieve_for(void *arg) {
+    long *num_ptr = (long *) arg;
+    long num = *num_ptr;
     printf("starting sieve for %ld\n", num);
     long current = num + num;
     while(current < MAX_NUM) {
@@ -193,27 +194,49 @@ void* sieve_for(long num) {
 
 int main(int argc, char **argv)
 {
-  /* TODO: YOUR IMPLEMENTATION GOES HERE */
-  int i;
-  pthread_t threads[NUM_THREADS];
-  long params[] = {2, 3, 5};
+    /* TODO: YOUR IMPLEMENTATION GOES HERE */
+    int i;
+    pthread_t threads[NUM_THREADS];
+    long params[] = {2, 3, 5};
 
-  for(int i = 2; i < MAX_NUM; i++) {
-      nums[i] = 'P'; //mark all numbers as potentially prime
-  }
+    for(int i = 2; i < MAX_NUM; i++) {
+        nums[i] = 'P'; //mark all numbers as potentially prime
+    }
 
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_create(&threads[i], NULL, sieve_for, (void *) &params[i]);
+        nums[params[i]] = 'S';
+    }
 
-  // these are put in parallel in PART 1
-  sieve_for(2);
-  sieve_for(3);
-  sieve_for(5);
+    for (int i = 0; i < NUM_THREADS; i++) {
+        pthread_join(threads[i], NULL);
+    }
 
-  // here's where you add your loop that starts batches of threads once other
-  // threads finish when you do part 2
+    // here's where you add your loop that starts batches of threads once other
+    // threads finish when you do part 2
+    pthread_t tids[MAX_NUM];
+    int index = 5;
+    int param_index = 0;
+    while (index < MAX_NUM) {
+        if (nums[index] == 'P') {
+            params[param_index] = index;
+            param_index++;
+            if (param_index >= NUM_THREADS || index == MAX_NUM - 1) {
+                param_index = 0;
+                for (int i = 0; i < NUM_THREADS; i++) {
+                    pthread_create(&tids[index - 2 + i], NULL, sieve_for, (void *) &params[i]);
+                }
+                for (int i = 0; i < NUM_THREADS; i++) {
+                    pthread_join(tids[index - 2 + i], NULL);
+                }
+            }
+        }
+        index++;
+    }
 
-  printf("primes are ");
-  for(long i = 2; i < MAX_NUM; i++) {
-      if(nums[i] == 'P') printf("%ld ", i);
-  }
-  printf("\n");
+    printf("primes are ");
+    for(long i = 2; i < MAX_NUM; i++) {
+        if(nums[i] == 'P') printf("%ld ", i);
+    }
+    printf("\n");
 }

@@ -87,40 +87,96 @@ green in northsouth direction
 
  */
 
+pthread_mutex_t lock = PTHREAD_MUTEX_INITIALIZER;
+
+pthread_cond_t yellow_cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t ns_waiting_cond = PTHREAD_COND_INITIALIZER;
+pthread_cond_t ew_waiting_cond = PTHREAD_COND_INITIALIZER;
+
+int green_in_ns = 1;
+int green_in_ew = 0;
+int num_cars_in_intersection = 0;
 
 void *north_south(void *arg)
 {
     printf("northsouth car nearing intersection\n");
+    pthread_mutex_lock(&lock);
+    while (!green_in_ns) {
+        pthread_cond_wait(&ns_waiting_cond, &lock);
+    }
+    num_cars_in_intersection++;
     printf("northsouth car entering intersection\n");
+    pthread_mutex_unlock(&lock);
+
     sleep(1);
+
+    pthread_mutex_lock(&lock);
+    num_cars_in_intersection--;
+    if (num_cars_in_intersection <= 0) {
+        pthread_cond_signal(&yellow_cond);
+    }
     printf("northsouth car leaving intersection\n");
+    pthread_mutex_unlock(&lock);
 }
 
 
 void *east_west(void *arg)
 {
     printf("eastwest car nearing intersection\n");
+    pthread_mutex_lock(&lock);
+    while (!green_in_ew) {
+        pthread_cond_wait(&ew_waiting_cond, &lock);
+    }
+    num_cars_in_intersection++;
     printf("eastwest car entering intersection\n");
+    pthread_mutex_unlock(&lock);
+
     sleep(1);
+
+    pthread_mutex_lock(&lock);
+    num_cars_in_intersection--;
+    if (num_cars_in_intersection <= 0) {
+        pthread_cond_signal(&yellow_cond);
+    }
     printf("eastwest car leaving intersection\n");
+    pthread_mutex_unlock(&lock);
 }
 
 
 void *stoplight(void *arg)
 {
-
+    pthread_mutex_lock(&lock);
+    green_in_ns = 1;
+    pthread_mutex_unlock(&lock);
     while(1) {
 
         sleep(1);
         printf("yellow\n");
 
+        pthread_mutex_lock(&lock);
+        green_in_ns = 0;
         // we need to wait for the intersection to clear
+        while (num_cars_in_intersection > 0) {
+            pthread_cond_wait(&yellow_cond, &lock);
+        }
         printf("green in eastwest direction\n");
-        sleep(1);
-        printf("yellow");
-        // we need to wait for the intersection to clear
-        printf("green in northsouth direction\n");
+        green_in_ew = 1;
+        pthread_cond_broadcast(&ew_waiting_cond);
+        pthread_mutex_unlock(&lock);
 
+        sleep(1);
+        printf("yellow\n");
+
+        pthread_mutex_lock(&lock);
+        green_in_ew = 0;
+        // we need to wait for the intersection to clear
+        while (num_cars_in_intersection > 0) {
+            pthread_cond_wait(&yellow_cond, &lock);
+        }
+        printf("green in northsouth direction\n");
+        green_in_ns = 1;
+        pthread_cond_broadcast(&ns_waiting_cond);
+        pthread_mutex_unlock(&lock);
     }
 
 }
